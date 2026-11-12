@@ -52,5 +52,5 @@ window.PROFILE = {
   photo: "assets/288633554_5143555052401659_1547590322614667676_n (1).jpg",
 
   // 8) 背景色（#RRGGBB）。文字色は自動で読みやすい色になります
-  theme: { background: "#F2A08C" }
+  theme: { background: "#A84B44" }
 };
