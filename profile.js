@@ -5,32 +5,32 @@
  * 値が "" の項目は名刺に表示されません。改行は \n で書きます。
  */
 window.PROFILE = {
-  __TEMPLATE__: true, // 作成が終わると false（true の間は「サンプル表示中」の注意が出ます）
+  __TEMPLATE__: false, // 作成が終わると false（true の間は「サンプル表示中」の注意が出ます）
 
   // 1) 基本情報（title 以外は必須）
   basic: {
-    name: "山田 太郎",            // 姓と名の間に空白を1つ
-    company: "株式会社サンプル",
-    address: "東京都千代田区丸の内1-1-1",
-    department: "DX推進部",
-    title: "マネージャー",         // 役職（任意）
-    email: "taro.yamada@example.co.jp",
-    phone: "03-1234-5678"
+    name: "林 一真",            // 姓と名の間に空白を1つ
+    company: "Repro株式会社",
+    address: "東京都渋谷区代々木1-36-4 全理連ビル4階",
+    department: "Sales",
+    title: "部長",         // 役職（任意）
+    email: "kazuma@repro.io",
+    phone: "090-1730-0254"
   },
 
   // 2) 起動時（約1秒）のロゴ: "company"（会社ロゴ）または "app"（アプリロゴ）
   splash: { logo: "company" },
 
   // 3) ひとこと（任意）：名前の下に大きく出る1〜2文。空欄なら「名刺を受け取っていただき、ありがとうございます。」
-  welcome: "今日はお時間をいただき、ありがとうございました。この名刺から、いつでもご連絡ください。",
+  welcome: "",
 
   // 4) SNS（URLで保存。使わないものは ""）
   sns: {
-    sansan: "",
-    instagram: "https://www.instagram.com/example",
-    facebook: "",
+    sansan: "https://ap.sansan.com/v/vc/37ity27glace3jokmdcrdjclk4/",
+    instagram: "",
+    facebook: "https://www.facebook.com/kazuma.hayashi1",
     x: "",
-    linkedin: "https://www.linkedin.com/in/example",
+    linkedin: "",
     whatsapp: "",           // 例: "https://wa.me/819012345678"
     others: [
       // { label: "note", url: "https://note.com/xxxx" }
@@ -38,7 +38,7 @@ window.PROFILE = {
   },
 
   // 5) 自己紹介（300文字程度）：ひとことの下に表示
-  intro: "DX推進部で、紙とハンコで回っていた社内手続きをデジタルに置き換える仕事をしています。現場の方と一緒に業務を観察し、小さく試して、効果が出たものから全社に広げるのが得意なやり方です。\n休日は家族でキャンプに行くことが多く、最近は焚き火料理に凝っています。仕事でも趣味でも、気軽に話しかけていただけるとうれしいです。",
+  intro: "広島生まれ、広島育ち。現在は高幡不動あたりに生息。家では8歳と4歳の息子がおります。\n\n趣味は、ボクシング、車、マンガ、スノボやスケボ、音楽、庭いじりやDIY、キャンプ等々多数...",
 
   // 6) 付帯情報（すべて任意。空欄の項目は表示されません）
   extra: {
@@ -49,8 +49,8 @@ window.PROFILE = {
   },
 
   // 7) 写真（assets/ に置いたファイル。"" ならイニシャルを表示）
-  photo: "assets/photo.jpg",
+  photo: "assets/288633554_5143555052401659_1547590322614667676_n (1).jpg",
 
   // 8) 背景色（#RRGGBB）。文字色は自動で読みやすい色になります
-  theme: { background: "#1F3A5F" }
+  theme: { background: "#F2A08C" }
 };
