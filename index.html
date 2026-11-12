@@ -1,0 +1,497 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#1F3A5F">
+<title>Digital Card</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Murecho:wght@400;500;700;900&display=swap" rel="stylesheet">
+<!-- メンバーごとのデータ（Claude Code が書き換えるのはこのファイルだけ） -->
+<script src="profile.js"></script>
+<style>
+:root{
+  --bg:#1F3A5F;
+  --fg-rgb:241,243,246;
+  --fg:rgb(var(--fg-rgb));
+  --muted:rgba(var(--fg-rgb),.76);
+  --line:rgba(var(--fg-rgb),.22);
+  --tint:rgba(var(--fg-rgb),.07);
+  --tint-strong:rgba(var(--fg-rgb),.14);
+  --pad:24px;
+  --font:"Murecho","Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic UI","Meiryo",system-ui,sans-serif;
+  --ease:cubic-bezier(.2,.7,.2,1);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;min-height:100vh;background:var(--bg);color:var(--fg);
+  font-family:var(--font);font-size:16px;line-height:1.7;
+  font-feature-settings:"palt" 1;-webkit-font-smoothing:antialiased;
+}
+body.locked{overflow:hidden}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+a{color:inherit;-webkit-tap-highlight-color:transparent}
+h1,h2,p,ul,dl,dd{margin:0}
+:focus-visible{outline:2px solid var(--fg);outline-offset:3px;border-radius:8px}
+
+/* ---------- 起動（ロゴ） ---------- */
+.splash{
+  position:fixed;inset:0;z-index:40;background:var(--bg);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:44px;cursor:pointer;
+  transition:opacity .6s var(--ease),visibility 0s linear .6s;
+}
+.splash.is-gone{opacity:0;visibility:hidden}
+.splash-mark{width:min(68vw,280px);display:grid;place-items:center;opacity:0;transform:scale(.96)}
+.splash-mark.in{animation:mark-in .5s var(--ease) forwards}
+.splash-mark img{max-width:100%;max-height:140px;object-fit:contain;display:block}
+.splash-mark svg{width:112px;height:112px;display:block}
+.splash-name{font-weight:900;font-size:clamp(26px,8vw,40px);line-height:1.3;text-align:center;overflow-wrap:anywhere}
+.splash-meter{width:min(36vw,150px);height:2px;border-radius:2px;background:var(--line);overflow:hidden}
+.splash-meter span{display:block;height:100%;background:var(--fg);transform:scaleX(0);transform-origin:left;animation:meter var(--splash-ms,1000ms) linear forwards}
+@keyframes mark-in{to{opacity:1;transform:none}}
+@keyframes meter{to{transform:scaleX(1)}}
+
+/* ---------- 名刺ページ（1枚・縦スクロール） ---------- */
+.card{
+  max-width:520px;margin:0 auto;
+  padding:calc(16px + env(safe-area-inset-top,0px)) calc(var(--pad) + env(safe-area-inset-right,0px)) calc(56px + env(safe-area-inset-bottom,0px)) calc(var(--pad) + env(safe-area-inset-left,0px));
+}
+.card-top{display:flex;justify-content:flex-end;align-items:center;min-height:28px}
+.card-logo{height:24px;max-width:120px;object-fit:contain}
+.sample-note{margin-top:10px;padding:8px 12px;border-radius:10px;background:var(--tint);color:var(--muted);font-size:12px;line-height:1.5}
+
+/* 写真と名前 */
+.who{display:grid;grid-template-columns:112px minmax(0,1fr);gap:18px;align-items:end;margin-top:28px}
+.photo{width:112px;aspect-ratio:4/5;border-radius:16px;overflow:hidden;background:var(--tint);display:grid;place-items:center}
+.photo img{width:100%;height:100%;object-fit:cover;display:block}
+.photo .initial{font-size:44px;font-weight:900;color:var(--muted)}
+.name{font-size:clamp(28px,8.4vw,38px);font-weight:900;line-height:1.2;margin-bottom:10px;overflow-wrap:anywhere}
+.org{font-size:14px;line-height:1.6;color:var(--muted)}
+.org strong{display:block;color:var(--fg);font-size:15px;font-weight:700}
+
+/* ひとこと・自己紹介 */
+.hitokoto{margin-top:32px;font-size:clamp(19px,5.4vw,22px);font-weight:700;line-height:1.75;white-space:pre-line}
+.intro{margin-top:14px;font-size:16px;line-height:1.95;white-space:pre-line;max-width:34em}
+
+/* セクション */
+.sec{margin-top:52px}
+.sec-title{font-size:20px;font-weight:900;line-height:1.35;margin-bottom:14px}
+.sec-sns .sec-title{font-size:clamp(25px,7.4vw,30px);line-height:1.3;margin-bottom:8px}
+.lead{color:var(--muted);font-size:15px;margin-bottom:18px}
+
+/* SNS */
+.sns{list-style:none;padding:0;display:grid;gap:10px}
+.sns a{
+  display:grid;grid-template-columns:44px minmax(0,1fr) 20px;align-items:center;gap:14px;
+  min-height:70px;padding:12px 16px 12px 13px;border-radius:18px;
+  background:var(--tint);border:1px solid var(--line);text-decoration:none;
+  transition:background-color .2s var(--ease);
+}
+.sns a:active{background:var(--tint-strong)}
+@media (hover:hover){.sns a:hover{background:var(--tint-strong)}}
+.badge{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:var(--fg);color:var(--bg);font-weight:700;font-size:15px;letter-spacing:.02em}
+.sns-name{display:block;font-weight:700;font-size:16px;line-height:1.3}
+.sns-handle{display:block;font-size:13px;line-height:1.4;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sns svg{opacity:.65}
+
+/* 連絡先・プロフィール */
+.contacts{list-style:none;padding:0;border-top:1px solid var(--line)}
+.contacts li{border-bottom:1px solid var(--line)}
+.contacts a{display:grid;grid-template-columns:4em minmax(0,1fr);gap:12px;align-items:baseline;padding:15px 2px;min-height:54px;text-decoration:none;font-size:15px;line-height:1.5}
+.contacts a span:first-child{color:var(--muted);font-size:13px}
+.contacts a span:last-child{overflow-wrap:anywhere;text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:4px}
+.facts{display:grid;grid-template-columns:auto minmax(0,1fr);border-top:1px solid var(--line)}
+.facts dt,.facts dd{padding:13px 0;border-bottom:1px solid var(--line)}
+.facts dt{color:var(--muted);font-size:13px;padding-right:24px;padding-top:15px}
+.facts dd{font-size:15px;overflow-wrap:anywhere}
+
+/* ボタン */
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:44px}
+.btn-line{min-height:50px;padding:12px 14px;border-radius:999px;border:1px solid var(--line);font-weight:700;font-size:14px;line-height:1.3}
+.btn-line:active{background:var(--tint)}
+.btn-text{min-height:48px;padding:12px 4px;color:var(--muted);font-weight:500}
+
+/* ---------- QRコード ---------- */
+dialog.qr{
+  width:min(88vw,360px);max-height:92vh;margin:auto;padding:28px 24px 14px;
+  border:1px solid var(--line);border-radius:24px;background:var(--bg);color:var(--fg);text-align:center;
+}
+dialog.qr::backdrop{background:rgba(0,0,0,.55)}
+.qr-title{font-size:22px;font-weight:900;line-height:1.3}
+.qr-sub{font-size:13px;color:var(--muted);margin:2px 0 18px}
+.qr-plate{width:100%;max-width:248px;aspect-ratio:1;margin:0 auto;padding:14px;border-radius:16px;background:#fff;display:grid;place-items:center}
+#qrCode{width:100%}
+#qrCode img,#qrCode canvas{width:100%!important;height:auto!important}
+.qr-error{color:#333;font-size:13px;line-height:1.6;padding:8px}
+.qr-url{font-size:12px;line-height:1.5;color:var(--muted);overflow-wrap:anywhere;margin:14px 0 16px}
+.qr-actions{display:flex;gap:10px;justify-content:center}
+.qr-actions .btn-line{flex:1}
+.qr-close{display:block;margin:6px auto 0}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
+</style>
+</head>
+<body class="locked">
+
+<section class="splash" id="splash" aria-label="読み込み中">
+  <div class="splash-mark" id="splashMark"></div>
+  <div class="splash-meter" aria-hidden="true"><span></span></div>
+</section>
+
+<main class="card" id="card" aria-label="名刺"></main>
+
+<dialog class="qr" id="qrDialog" aria-labelledby="qrTitle">
+  <p class="qr-title" id="qrTitle"></p>
+  <p class="qr-sub" id="qrSub"></p>
+  <div class="qr-plate"><div id="qrCode"></div></div>
+  <p class="qr-url" id="qrUrl"></p>
+  <div class="qr-actions">
+    <button type="button" class="btn-line" id="copyBtn">URLをコピー</button>
+    <button type="button" class="btn-line" id="shareBtn" hidden>共有</button>
+  </div>
+  <button type="button" class="btn-text qr-close" id="qrClose">閉じる</button>
+</dialog>
+
+<script>
+(() => {
+  "use strict";
+
+  /* =========================================================
+     管理者設定（メンバーは触らない）
+     ========================================================= */
+  const ASSETS = {
+    // 上から順に探して、最初に見つかったロゴを使う（PNG・SVGどちらでも書き換え不要）
+    companyLogo: ["assets/company-logo.png", "assets/company-logo.svg"],
+    // 濃い背景用の白抜きロゴ（無ければ通常ロゴを使用）
+    companyLogoLight: ["assets/company-logo-light.png", "assets/company-logo-light.svg"],
+    appLogo: "" // アプリロゴの画像パス。空なら内蔵マークを表示
+  };
+  const SPLASH_MS = 1000;   // 起動ロゴを表示する長さ
+  const QR_LIB = "https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js";
+
+  /* profile.js が読めないときのサンプル */
+  const DEMO = {
+    basic: {
+      name: "山田 太郎", company: "株式会社サンプル", address: "東京都千代田区丸の内1-1-1",
+      department: "DX推進部", title: "マネージャー",
+      email: "taro.yamada@example.co.jp", phone: "03-1234-5678"
+    },
+    splash: { logo: "company" },
+    welcome: "今日はお時間をいただき、ありがとうございました。この名刺から、いつでもご連絡ください。",
+    sns: {
+      facebook: "https://www.facebook.com/example",
+      instagram: "https://www.instagram.com/example",
+      linkedin: "https://www.linkedin.com/in/example"
+    },
+    intro: "DX推進部で、紙とハンコで回っていた社内手続きをデジタルに置き換える仕事をしています。現場の方と一緒に業務を観察し、小さく試して、効果が出たものから全社に広げるのが得意なやり方です。\n休日は家族でキャンプに行くことが多く、最近は焚き火料理に凝っています。仕事でも趣味でも、気軽に話しかけていただけるとうれしいです。",
+    extra: { birthday: "4月1日", hometown: "静岡県", hobbies: "キャンプ、焚き火料理" },
+    photo: "assets/photo.jpg",
+    theme: { background: "#1F3A5F" }
+  };
+
+  const APP_MARK = '<svg viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="12" y="32" width="74" height="54" rx="10"/><circle cx="33" cy="52" r="7" fill="currentColor" stroke="none"/><path d="M50 49h22M50 64h14"/><path d="M96 43a26 26 0 0 1 0 32"/><path d="M106 33a40 40 0 0 1 0 52" opacity=".55"/></svg>';
+  const EXT_ICON = '<svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.5 4H16v4.5"/><path d="M16 4l-7 7"/><path d="M14 11.5V15a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h3.5"/></svg>';
+
+  /* SNSの表示順（1位 Facebook、2位 Sansan） */
+  const SNS_DEFS = [
+    { key: "facebook",  label: "Facebook",  mark: "Fb", toUrl: v => "https://www.facebook.com/" + v },
+    { key: "sansan",    label: "Sansan",    mark: "Sa", toUrl: v => v },
+    { key: "instagram", label: "Instagram", mark: "Ig", toUrl: v => "https://www.instagram.com/" + v.replace(/^@/, "") },
+    { key: "x",         label: "X",         mark: "X",  toUrl: v => "https://x.com/" + v.replace(/^@/, "") },
+    { key: "linkedin",  label: "LinkedIn",  mark: "In", toUrl: v => "https://www.linkedin.com/in/" + v },
+    { key: "whatsapp",  label: "WhatsApp",  mark: "Wa", toUrl: v => "https://wa.me/" + v.replace(/\D/g, "").replace(/^0/, "81") }
+  ];
+
+  /* ---------- helpers ---------- */
+  const $ = s => document.querySelector(s);
+  const $$ = s => [...document.querySelectorAll(s)];
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const str = v => typeof v === "string" ? v.trim() : typeof v === "number" ? String(v) : "";
+  const safeUrl = u => { try { const x = new URL(u); return x.protocol === "https:" || x.protocol === "http:"; } catch { return false; } };
+  const pageUrl = () => location.href.split(/[?#]/)[0];
+  const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function handleOf(key, url) {
+    try {
+      const u = new URL(url);
+      const seg = u.pathname.split("/").filter(Boolean);
+      if (key === "whatsapp") { const d = seg.join("").replace(/\D/g, ""); return d ? "+" + d : ""; }
+      if (key === "instagram" || key === "x") return seg[0] ? "@" + seg[0] : "";
+      if (key === "linkedin") return seg.length ? seg[seg.length - 1] : "";
+      return (u.hostname.replace(/^www\./, "") + (seg.length ? "/" + seg.join("/") : "")).slice(0, 60);
+    } catch { return ""; }
+  }
+
+  function buildSns(s) {
+    const out = [];
+    for (const d of SNS_DEFS) {
+      const v = str(s[d.key]);
+      if (!v) continue;
+      const url = /^https?:\/\//i.test(v) ? v : d.toUrl(v);
+      if (safeUrl(url)) out.push({ label: d.label, mark: d.mark, url, handle: handleOf(d.key, url) });
+    }
+    (Array.isArray(s.others) ? s.others : []).forEach(o => {
+      const label = str(o && o.label), url = str(o && o.url);
+      if (label && safeUrl(url)) out.push({ label, mark: [...label][0].toUpperCase(), url, handle: handleOf("other", url) });
+    });
+    return out;
+  }
+
+  function normalize(src) {
+    const b = src.basic || {}, e = src.extra || {};
+    const age = str(e.age);
+    return {
+      name: str(b.name), company: str(b.company), address: str(b.address),
+      department: str(b.department), title: str(b.title), email: str(b.email), phone: str(b.phone),
+      splashLogo: str((src.splash || {}).logo) === "app" ? "app" : "company",
+      hitokoto: str(src.welcome) || "名刺を受け取っていただき、ありがとうございます。",
+      sns: buildSns(src.sns || {}),
+      intro: str(src.intro),
+      extra: [
+        ["年齢", /^\d+$/.test(age) ? age + "歳" : age],
+        ["生年月日", str(e.birthday)],
+        ["出身", str(e.hometown)],
+        ["趣味", str(e.hobbies)]
+      ].filter(([, v]) => v),
+      photo: str(src.photo),
+      bg: str((src.theme || {}).background)
+    };
+  }
+
+  const raw = window.PROFILE;
+  const P = normalize(raw || DEMO);
+  const sampleMsg = !raw
+    ? "サンプル表示中です。profile.js が見つかりません。"
+    : raw.__TEMPLATE__ === true ? "サンプル表示中です。Claude Code で名刺を作成すると、この表示は消えます。" : "";
+
+  /* ---------- 背景色から読みやすい文字色を自動決定 ---------- */
+  let isDark = true;
+  function applyTheme(hex) {
+    const m = /^#?([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(hex || "");
+    let h = m ? m[1] : "1F3A5F";
+    if (h.length === 3) h = h.split("").map(c => c + c).join("");
+    const n = parseInt(h, 16);
+    const bg = [n >> 16 & 255, n >> 8 & 255, n & 255];
+    const lum = ([r, g, b]) => {
+      const f = c => { c /= 255; return c <= .03928 ? c / 12.92 : Math.pow((c + .055) / 1.055, 2.4); };
+      return .2126 * f(r) + .7152 * f(g) + .0722 * f(b);
+    };
+    const contrast = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + .05) / (y + .05); };
+    const mix = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
+    const light = mix(bg, [255, 255, 255], .94), dark = mix(bg, [0, 0, 0], .86);
+    isDark = contrast(bg, light) >= contrast(bg, dark);
+    const fg = isDark ? light : dark;
+    const root = document.documentElement.style;
+    root.setProperty("--bg", "#" + h);
+    root.setProperty("--fg-rgb", fg.join(","));
+    $('meta[name="theme-color"]').setAttribute("content", "#" + h);
+  }
+
+  const loadImg = src => new Promise(res => {
+    if (!src) return res(null);
+    const i = new Image();
+    i.onload = () => res(src);
+    i.onerror = () => res(null);
+    i.src = src;
+  });
+  const loadFirst = async list => {
+    for (const src of [].concat(list || [])) { const ok = await loadImg(src); if (ok) return ok; }
+    return null;
+  };
+  let logoJob = null;
+  function companyLogo() {
+    if (!logoJob) logoJob = (async () => (isDark && await loadFirst(ASSETS.companyLogoLight)) || loadFirst(ASSETS.companyLogo))();
+    return logoJob;
+  }
+
+  /* ---------- 起動（ロゴ） ---------- */
+  async function renderSplash() {
+    const mark = $("#splashMark");
+    let html;
+    if (P.splashLogo === "app") {
+      html = ASSETS.appLogo && await loadImg(ASSETS.appLogo) ? `<img src="${esc(ASSETS.appLogo)}" alt="">` : APP_MARK;
+    } else {
+      const src = await companyLogo();
+      html = src ? `<img src="${esc(src)}" alt="${esc(P.company)}">` : `<span class="splash-name">${esc(P.company || P.name)}</span>`;
+    }
+    mark.innerHTML = html;
+    mark.classList.add("in");
+  }
+
+  /* ---------- 名刺ページ（写真・名前 → ひとこと・自己紹介 → SNS → 連絡先 → プロフィール → 保存・QR） ---------- */
+  function renderCard() {
+    const initial = esc([...P.name.replace(/\s/g, "")][0] || "?");
+    const role = [P.department, P.title].filter(Boolean).map(esc).join(" / ");
+    const contacts = [
+      P.email && ["メール", "mailto:" + P.email, P.email, false],
+      P.phone && ["電話", "tel:" + P.phone.replace(/[^\d+]/g, ""), P.phone, false],
+      P.address && ["住所", "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(P.address), P.address, true]
+    ].filter(Boolean);
+
+    $("#card").innerHTML = `
+      <div class="card-top"><img class="card-logo" id="cardLogo" alt="" hidden></div>
+      ${sampleMsg ? `<p class="sample-note">${esc(sampleMsg)}</p>` : ""}
+
+      <div class="who">
+        <div class="photo">${P.photo
+          ? `<img src="${esc(P.photo)}" alt="${esc(P.name)}の写真" data-initial="${initial}">`
+          : `<span class="initial" aria-hidden="true">${initial}</span>`}</div>
+        <div>
+          <h1 class="name">${esc(P.name)}</h1>
+          <p class="org">${P.company ? `<strong>${esc(P.company)}</strong>` : ""}${role}</p>
+        </div>
+      </div>
+
+      <p class="hitokoto">${esc(P.hitokoto)}</p>
+      ${P.intro ? `<p class="intro">${esc(P.intro)}</p>` : ""}
+
+      ${P.sns.length ? `
+      <section class="sec sec-sns" aria-labelledby="secSns">
+        <h2 class="sec-title" id="secSns">SNSで<br>つながりませんか？</h2>
+        <p class="lead">フォローやメッセージ、お待ちしています。</p>
+        <ul class="sns">${P.sns.map(s => `
+          <li><a href="${esc(s.url)}" target="_blank" rel="noopener">
+            <span class="badge" aria-hidden="true">${esc(s.mark)}</span>
+            <span class="sns-text"><span class="sns-name">${esc(s.label)}</span>${s.handle ? `<span class="sns-handle">${esc(s.handle)}</span>` : ""}</span>
+            ${EXT_ICON}
+          </a></li>`).join("")}</ul>
+      </section>` : ""}
+
+      ${contacts.length ? `
+      <section class="sec" aria-labelledby="secContact">
+        <h2 class="sec-title" id="secContact">連絡先</h2>
+        <ul class="contacts">${contacts.map(([k, href, v, ext]) =>
+          `<li><a href="${esc(href)}"${ext ? ' target="_blank" rel="noopener"' : ""}><span>${k}</span><span>${esc(v)}</span></a></li>`).join("")}</ul>
+      </section>` : ""}
+
+      ${P.extra.length ? `
+      <section class="sec" aria-labelledby="secProfile">
+        <h2 class="sec-title" id="secProfile">プロフィール</h2>
+        <dl class="facts">${P.extra.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join("")}</dl>
+      </section>` : ""}
+
+      <div class="actions">
+        <button type="button" class="btn-line" id="saveBtn">連絡先に保存</button>
+        <button type="button" class="btn-line" id="qrBtn">QRコードを表示</button>
+      </div>`;
+
+    $$(".photo img").forEach(img => {
+      const fallback = () => { img.parentElement.innerHTML = `<span class="initial" aria-hidden="true">${img.dataset.initial}</span>`; };
+      img.addEventListener("error", fallback, { once: true });
+      if (img.complete && img.naturalWidth === 0) fallback();
+    });
+    $("#saveBtn").addEventListener("click", saveContact);
+    $("#qrBtn").addEventListener("click", openQR);
+    document.title = [P.name, P.company].filter(Boolean).join(" | ") || "Digital Card";
+  }
+
+  /* ---------- 連絡先（vCard） ---------- */
+  function vcard() {
+    const e = s => s.replace(/\\/g, "\\\\").replace(/\n/g, "\\n").replace(/([,;])/g, "\\$1");
+    const parts = P.name.split(/[\s\u3000]+/).filter(Boolean);
+    const L = ["BEGIN:VCARD", "VERSION:3.0",
+      "N:" + (parts.length > 1 ? `${e(parts[0])};${e(parts.slice(1).join(" "))};;;` : `${e(P.name)};;;;`),
+      "FN:" + e(P.name)];
+    if (P.company) L.push("ORG:" + e(P.company) + (P.department ? ";" + e(P.department) : ""));
+    if (P.title) L.push("TITLE:" + e(P.title));
+    if (P.phone) L.push("TEL;TYPE=WORK,VOICE:" + P.phone);
+    if (P.email) L.push("EMAIL;TYPE=INTERNET,WORK:" + P.email);
+    if (P.address) L.push("ADR;TYPE=WORK:;;" + e(P.address) + ";;;;");
+    L.push("URL:" + pageUrl());
+    P.sns.forEach(s => L.push(`X-SOCIALPROFILE;TYPE=${s.label.toLowerCase().replace(/\s+/g, "")}:${s.url}`));
+    L.push("END:VCARD");
+    return L.join("\r\n");
+  }
+  function saveContact() {
+    const blob = new Blob([vcard()], { type: "text/vcard;charset=utf-8" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = (P.name || "contact").replace(/[\\/:*?"<>|\s]+/g, "_") + ".vcf";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  }
+
+  /* ---------- QRコード ---------- */
+  let qrLib = null;
+  const loadQRLib = () => {
+    if (window.QRCode) return Promise.resolve();
+    if (!qrLib) qrLib = new Promise((res, rej) => {
+      const s = document.createElement("script");
+      s.src = QR_LIB; s.onload = res; s.onerror = () => { qrLib = null; rej(); };
+      document.head.appendChild(s);
+    });
+    return qrLib;
+  };
+  async function openQR() {
+    const url = pageUrl();
+    $("#qrTitle").textContent = P.name;
+    $("#qrSub").textContent = [P.company, P.department].filter(Boolean).join(" ");
+    $("#qrUrl").textContent = url;
+    $("#shareBtn").hidden = !navigator.share;
+    const d = $("#qrDialog");
+    if (!d.open) { d.showModal ? d.showModal() : d.setAttribute("open", ""); }
+    const box = $("#qrCode");
+    box.innerHTML = "";
+    try {
+      await loadQRLib();
+      new QRCode(box, { text: url, width: 512, height: 512, colorDark: "#000000", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.M });
+    } catch {
+      box.innerHTML = '<p class="qr-error">QRコードを表示できませんでした。通信できる状態で、もう一度開いてください。</p>';
+    }
+  }
+  function flash(btn, msg) {
+    const orig = btn.dataset.label || (btn.dataset.label = btn.textContent);
+    btn.textContent = msg;
+    setTimeout(() => { btn.textContent = orig; }, 2000);
+  }
+
+  /* ---------- 起動 ---------- */
+  function start() {
+    if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+    applyTheme(P.bg);
+    renderCard();
+    companyLogo().then(src => { if (src) { const l = $("#cardLogo"); l.src = src; l.alt = P.company; l.hidden = false; } });
+
+    $("#qrClose").addEventListener("click", () => $("#qrDialog").close ? $("#qrDialog").close() : $("#qrDialog").removeAttribute("open"));
+    $("#copyBtn").addEventListener("click", async e => {
+      try { await navigator.clipboard.writeText(pageUrl()); flash(e.currentTarget, "コピーしました"); }
+      catch { flash(e.currentTarget, "コピーできませんでした"); }
+    });
+    $("#shareBtn").addEventListener("click", () => navigator.share({ title: document.title, url: pageUrl() }).catch(() => {}));
+
+    // 自分のQRをすぐ見せたいとき: 公開URL?qr（起動ロゴを出さない）
+    if (new URLSearchParams(location.search).has("qr")) {
+      $("#splash").classList.add("is-gone");
+      document.body.classList.remove("locked");
+      openQR();
+      return;
+    }
+
+    // 起動ロゴ（約1秒・タップで飛ばせる）→ 名刺ページ
+    document.documentElement.style.setProperty("--splash-ms", SPLASH_MS + "ms");
+    scrollTo(0, 0);
+    renderSplash();
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      $("#splash").classList.add("is-gone");
+      document.body.classList.remove("locked");
+    };
+    const timer = setTimeout(finish, SPLASH_MS);
+    $("#splash").addEventListener("click", finish);
+
+    (window.requestIdleCallback || (f => setTimeout(f, 3000)))(() => loadQRLib().catch(() => {}));
+  }
+
+  start();
+})();
+</script>
+</body>
+</html>
